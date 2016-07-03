@@ -15,11 +15,12 @@ private:
   node * next;
 public:  node() {ord=0;next=0;}
   node(int p, node * t = 0)  {ord=p;next=t;}
-  node * add(int p)
-  {next = new node (p);return next;}
+  node * add(int p)  {next = new node (p);return next;}
+  node * add(node * n) {next = n;return next;}
   int get_ord() {return ord;}
   node * get_next() {return next;}
   void set_next(node * pnode) {next=pnode;}
+  void set_ord(int o) {ord=o;}
   ~node() {};
 };
 class hdtl
@@ -43,13 +44,14 @@ public: hdtl() {head=0;tail=0;num=1;ord=0;}
   void setn(int n) {num=n;}
   void seto(int o) {ord=o;}
   void add(int p) {tail=tail->add(p);num++;}
+  void add(node * n) {tail=tail->add(n);}
   int joint(hdtl * h1)
   {
     if (num>h1->get_num())
       {
 	tail->set_next(h1->get_head());
 	tail = h1->get_tail();
-	num +=h1->get_num();
+	num += h1->get_num();
 	h1->seto(ord);
       }
     else
@@ -71,8 +73,8 @@ void atob(int *, int *, int, int, int);
 void inic(linkh *,int, int);
 void btoc(int *, linkh *, int, int);
 void output(int *, int, int);
-void outputc(linkh *, int, int,int);
 void output_list(linkh *, int *, int, int);
+void output_first(linkh *, int *, int, int, int , int);
 // the "set" function is the most important funtion here.
 void set(int, int, int, int, int [], int *, linkh *);
 int up(int, linkh *);
@@ -99,11 +101,6 @@ int main(int argc, char *argv[])
 	  int * brr=new int [m*n]; 
 	  linkh * crr=new linkh [m*n];
 	  int * p=new int [m*n];
-	  int (*drr)[n]=(int (*)[n]) p;
-	  // initialize drr.
-	  for (int i=0;i<m;i++)
-	    for (int j=0;j<n;j++)
-	      drr[i][j]=999;
 	  int fa=rand()%m+1;
 	  int fb=rand()%n+1;
 	  //int fa=5;
@@ -113,18 +110,16 @@ int main(int argc, char *argv[])
 	  output(brr,m,n);
 	  inic(crr,m,n);
 	  btoc(brr,crr,m,n);
-	  //outputc(crr,m,n,1);
 	  output_list(crr,brr,m,n);
-	  //getd(m+2,n+2,brr,crr[0].get_head());
-	  //output(brr,m+2,n+2);
+	  output_first(crr,brr,m,n,fa,fb);
 	  delete [] arr;
 	  delete [] brr;
 	  delete [] crr;
-	  delete [] drr;
 	}
     }
   return 0;
 }
+// arrange the landmines randomly.
 // arr is information of position of landmines,
 // n is the number of landmines,
 // a is row number, b is the column number,
@@ -174,9 +169,9 @@ void arrange(int *arr,int a, int b, int n, int fa, int fb)
     }
   delete [] trr;
 }
-// According to arr, computer the number of landmines
-// around the given position, and store the information
-// in brr.
+// According to the distribution of landmines, computer
+// the number of landmines around specific position.
+// and store the information in brr array.
 void atob(int *arr, int *q, int num, int m, int n)
 {
   int (*brr)[n]=(int (*)[n]) q;
@@ -207,42 +202,21 @@ void atob(int *arr, int *q, int num, int m, int n)
       brr[i][j]=trr[i+1][j+1];
   delete [] trr;
 }
+// initialize the crr array.
 void inic(linkh *crr,int m, int n)
 {
   int N=n*m;
   for (int i=0;i<N;i++)
     crr[i] = new hdtl(new node(i),1,i);
 }
-void outputc(linkh *p,int m, int n, int s)
-{
-  using namespace std;
-  linkh (*crr)[n] =(linkh (*)[n]) p;
-  for (int i=0;i<m;i++)
-    {
-      for (int j=0;j<n;j++)
-	switch (s)
-	  {
-	  case 0:
-	    cout << crr[i][j]->get_num() << "  ";
-	    break;
-	  case 1:
-	    cout << crr[i][j]->get_ord() << "  ";
-	    break;
-	  case 2:
-	    cout << crr[i][j]->get_head() << "  ";
-	    break;
-	  case 3:
-	    cout << crr[i][j]->get_tail() << "  ";
-	    break;
-	  default:
-	    cout << "error, the fourth parameter must be 0,1,2,3" << endl;
-	  }
-      cout << endl;
-    }
-  cout << endl;
-}
+// partition the region according to the distrution of
+// the landmines. It's the most difficult part of the mineswept
+// game. Because something when we click the game region,
+// a large block will be open, and the shape of the block may
+// be very wired. the information stores in crr array.
 void btoc(int *p, linkh *crr, int m, int n)
 {
+  using namespace std;
   int (*brr)[n]=(int (*)[n]) p;
   linkn pt;
   // the four corners, the four edges and the center rigion
@@ -261,17 +235,18 @@ void btoc(int *p, linkh *crr, int m, int n)
   set(m-1,0,m,n,cor3,p,crr);          // bottom_left
   set(m-1,n-1,m,n,cor4,p,crr);        // bottom_right
   for (int i=1;i<n-1;i++)             // up
-    set(0,i,m,n,matu,p,crr);        
+    set(0,i,m,n,matu,p,crr);
   for (int i=1;i<n-1;i++)             // down
     set(m-1,i,m,n,matd,p,crr);
   for (int i=1;i<m-1;i++)             // left
     set(i,0,m,n,matl,p,crr);
   for (int i=1;i<m-1;i++)             // right
     set(i,n-1,m,n,matr,p,crr);
-  for (int i=1;i<n-1;i++)             // center
-    for (int j=1;j<m-1;j++)
+  for (int i=1;i<m-1;i++)             // center
+    for (int j=1;j<n-1;j++)
       set(i,j,m,n,matc,p,crr);
 }
+// move the node up to the root
 int up(int ch, linkh *crr)
 {
   int fa=crr[ch]->get_ord();
@@ -286,6 +261,8 @@ int up(int ch, linkh *crr)
     }
   return fa;
 }
+// partition the game region, it is the main function which makes
+// the mineswept design work.
 void set(int is,int js, int m, int n, int mat[], int * p, linkh * crr)
 {
   int (*brr)[n]=(int (*)[n]) p;
@@ -299,18 +276,23 @@ void set(int is,int js, int m, int n, int mat[], int * p, linkh * crr)
 	{
 	  is += mat[k];
 	  js += mat[k+1];
-	  tsub = is*n+js;	  
-	  if (brr[is][js]==0)
+	  tsub = is*n+js;
+	  tsub=up(tsub,crr);
+	  int tis=tsub/n,tjs=tsub%n;
+	  if (sub!=tsub)
 	    {
-	      tsub = up(tsub,crr);
-	      if (sub!=tsub)
+	      if (brr[tis][tjs]==0)
 		sub = (crr[sub]->joint(crr[tsub]));
+	      else
+		{
+		  crr[sub]->add(tsub);
+		  crr[tsub]->seto(sub);
+		}
 	    }
-	  else
-	    crr[sub]->add(tsub);
 	}
     }
 }
+// output the array.
 void output(int *p, int a, int b)
 {
   int (*crr)[b]=(int (*)[b]) p;
@@ -328,12 +310,36 @@ void output(int *p, int a, int b)
     }
   cout << endl;
 }
+// output the block which is near to the up-left
+// of the region
 void output_list(linkh * crr, int * brr, int m, int n)
 {
-  int N=m*n,sub;
-  for (sub=0;sub<N;sub++)
+  int N=m*n,sub=0;
+  for (;sub<N;sub++)
     if (brr[sub]==0&&crr[sub]->get_ord()==sub)
       break;
+  node * head = crr[sub]->get_head();
+  int * arr = new int[N];
+  for (int i=0;i<N;i++)
+    arr[i]=999;
+  int ed = crr[sub]->get_num();
+  for (int i=0;i<ed;i++)
+    {		     
+      sub = head->get_ord();
+      arr[sub] = brr[sub];
+      head=head->get_next();
+    }
+  output(arr,m,n);
+  delete [] arr;
+}
+// output the region which contains the first click.
+void output_first(linkh *crr, int *brr, int m, int n, int fa, int fb)
+{
+  using namespace std;
+  int N=m*n;
+  int sub = (fa-1)*n+fb-1;
+  while (sub!=crr[sub]->get_ord())
+    sub=crr[sub]->get_ord();
   node * head = crr[sub]->get_head();
   int * arr = new int[N];
   for (int i=0;i<N;i++)
