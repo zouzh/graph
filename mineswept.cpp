@@ -358,3 +358,4 @@ void output_max(linkh * crr, int * brr, int m, int n)
   output(arr,m,n);
   delete [] arr;
 }
+echo # game
