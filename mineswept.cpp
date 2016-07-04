@@ -73,8 +73,9 @@ void atob(int *, int *, int, int, int);
 void inic(linkh *,int, int);
 void btoc(int *, linkh *, int, int);
 void output(int *, int, int);
-void output_list(linkh *, int *, int, int);
+void outputc(linkh *,int, int, int);
 void output_first(linkh *, int *, int, int, int , int);
+void output_max(linkh *, int *, int, int);
 // the "set" function is the most important funtion here.
 void set(int, int, int, int, int [], int *, linkh *);
 int up(int, linkh *);
@@ -85,7 +86,7 @@ int main(int argc, char *argv[])
   int n=atoi(argv[2]);
   if (m<6||n<6)
     cout << "Error, the region is at least 10*10" << endl;
-  else if (m>1000||n>30)
+  else if (m>10000000||n>30)
     cout << "Error, the region is at most 100*30" << endl;
   else
     {
@@ -105,13 +106,17 @@ int main(int argc, char *argv[])
 	  int fb=rand()%n+1;
 	  //int fa=5;
 	  //int fb=5;
+	  clock_t st = clock();
 	  arrange(arr,m,n,num,fa,fb);
 	  atob(arr,brr,num,m,n);
 	  output(brr,m,n);
 	  inic(crr,m,n);
-	  btoc(brr,crr,m,n);
-	  output_list(crr,brr,m,n);
+	  btoc(brr,crr,m,n);	  
+	  clock_t ed = clock();
 	  output_first(crr,brr,m,n,fa,fb);
+	  output_max(crr,brr,m,n);
+	  cout << "Time is: " << (double) (ed -st) / CLOCKS_PER_SEC
+	       << endl;
 	  delete [] arr;
 	  delete [] brr;
 	  delete [] crr;
@@ -277,13 +282,13 @@ void set(int is,int js, int m, int n, int mat[], int * p, linkh * crr)
 	  is += mat[k];
 	  js += mat[k+1];
 	  tsub = is*n+js;
-	  tsub=up(tsub,crr);
-	  int tis=tsub/n,tjs=tsub%n;
+	  if (brr[is][js]==0)
+	    tsub=up(tsub,crr);
 	  if (sub!=tsub)
 	    {
-	      if (brr[tis][tjs]==0)
+	      if (brr[is][js]==0)
 		sub = (crr[sub]->joint(crr[tsub]));
-	      else
+	      else if (sub!=up(tsub,crr))
 		{
 		  crr[sub]->add(tsub);
 		  crr[tsub]->seto(sub);
@@ -310,14 +315,12 @@ void output(int *p, int a, int b)
     }
   cout << endl;
 }
-// output the block which is near to the up-left
-// of the region
-void output_list(linkh * crr, int * brr, int m, int n)
+// output the region which contains the first click.
+void output_first(linkh *crr, int *brr, int m, int n, int fa, int fb)
 {
-  int N=m*n,sub=0;
-  for (;sub<N;sub++)
-    if (brr[sub]==0&&crr[sub]->get_ord()==sub)
-      break;
+  int N=m*n;
+  int sub = (fa-1)*n+fb-1;
+  sub=up(sub,crr);
   node * head = crr[sub]->get_head();
   int * arr = new int[N];
   for (int i=0;i<N;i++)
@@ -332,20 +335,21 @@ void output_list(linkh * crr, int * brr, int m, int n)
   output(arr,m,n);
   delete [] arr;
 }
-// output the region which contains the first click.
-void output_first(linkh *crr, int *brr, int m, int n, int fa, int fb)
+// output the max "0" block region
+void output_max(linkh * crr, int * brr, int m, int n)
 {
-  using namespace std;
-  int N=m*n;
-  int sub = (fa-1)*n+fb-1;
-  while (sub!=crr[sub]->get_ord())
-    sub=crr[sub]->get_ord();
+  int N=m*n,sub=0,max=1;
+  for (int i=0;i<N;i++)
+    if ((brr[i]==0)&&(max<crr[up(i,crr)]->get_num()))
+      {
+	max=crr[up(i,crr)]->get_num();
+	sub=up(i,crr);
+      }
   node * head = crr[sub]->get_head();
   int * arr = new int[N];
   for (int i=0;i<N;i++)
     arr[i]=999;
-  int ed = crr[sub]->get_num();
-  for (int i=0;i<ed;i++)
+  for (int i=0;i<max;i++)
     {		     
       sub = head->get_ord();
       arr[sub] = brr[sub];
