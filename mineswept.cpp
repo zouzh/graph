@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // shaolei.cpp -- achieve shaolei using c++
+=======
+// mineswept.cpp -- achieve mineswept using c++
+>>>>>>> cd1aa7e... saolei
 //                the region of game is at least 10*10, and at most 30*30
 //                when someone begin the game, he won't step at landmine
 //                and there hasn't any landmine around the first
@@ -85,9 +89,21 @@ int main(int argc, char *argv[])
   int m=atoi(argv[1]);
   int n=atoi(argv[2]);
   if (m<6||n<6)
+<<<<<<< HEAD
     cout << "Error, the region is at least 10*10" << endl;
   else if (m>10000000||n>30)
     cout << "Error, the region is at most 100*30" << endl;
+=======
+<<<<<<< HEAD
+    cout << "Error, the region is at least 10*10" << endl;
+  else if (m>10000000||n>30)
+    cout << "Error, the region is at most 100*30" << endl;
+=======
+    cout << "Error, the region is at least 6*6" << endl;
+  else if (m>1000||n>30)
+    cout << "Error, the region is at most 1000*30" << endl;
+>>>>>>> Update mineswept.cpp
+>>>>>>> cd1aa7e... saolei
   else
     {
       int num=atoi(argv[3]);
@@ -359,3 +375,7 @@ void output_max(linkh * crr, int * brr, int m, int n)
   delete [] arr;
 }
 echo # game
+<<<<<<< HEAD
+=======
+# game
+>>>>>>> cd1aa7e... saolei
